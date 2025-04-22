@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生体检数据检查</title>
+    <link rel="stylesheet" href="lib/bootstrap.5.3.5.min.css">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+<div id="app" class="mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>学生体检数据检查</h1>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col">
+            <div class="input-group">
+                <button class="btn btn-primary" @click="selectFile">选择Excel文件</button>
+                <label>
+                    <input type="text" class="form-control" v-model="selectedFileName" readonly>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="processing" class="row mb-4">
+        <div class="col">
+            <div class="progress">
+                <div class="progress-bar progress-bar-striped progress-bar-animated"
+                     role="progressbar"
+                     :style="{ width: progress + '%' }"
+                     :aria-valuenow="progress"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                    {{ progress }}%
+                </div>
+            </div>
+            <div class="text-center mt-2">
+                正在处理第 {{ currentRow }} 条记录，共 {{ totalRows }} 条
+            </div>
+        </div>
+    </div>
+
+    <div v-if="errorStudents.length > 0" class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <span class="me-2">每页显示：</span>
+                    <label>
+                        <input type="number"
+                               class="form-control form-control-sm"
+                               style="width: 80px;"
+                               v-model="inputPageSize"
+                               @change="changePageSize"
+                               min="1">
+                    </label>
+                    <span class="ms-2">条</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-success me-2" @click="exportExcel">
+                        <i class="bi bi-file-earmark-excel"></i> 导出Excel
+                    </button>
+                    <span class="me-2">共 {{ totalRecords }} 条记录，{{ totalPages }} 页</span>
+                    <button class="btn btn-sm btn-outline-primary"
+                            @click="goToPage(1)"
+                            :disabled="currentPage === 1">
+                        首页
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary ms-2"
+                            @click="goToPage(currentPage - 1)"
+                            :disabled="currentPage === 1">
+                        上一页
+                    </button>
+                    <template v-for="page in displayedPages" :key="page">
+                        <button class="btn btn-sm ms-2"
+                                :class="{'btn-primary': currentPage === page, 'btn-outline-primary': currentPage !== page}"
+                                @click="goToPage(page)">
+                            {{ page }}
+                        </button>
+                    </template>
+                    <button class="btn btn-sm btn-outline-primary ms-2"
+                            @click="goToPage(currentPage + 1)"
+                            :disabled="currentPage === totalPages">
+                        下一页
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary ms-2"
+                            @click="goToPage(totalPages)"
+                            :disabled="currentPage === totalPages">
+                        末页
+                    </button>
+                    <span class="ms-2">
+                            第
+                        <label>
+                            <input type="number"
+                                   class="form-control form-control-sm d-inline-block"
+                                   style="width: 60px;"
+                                   v-model="inputPage"
+                                   @change="goToInputPage">
+                        </label>
+                            页
+                        </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="errorStudents.length > 0" class="row mb-4">
+        <div class="col">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped table-hover">
+                    <thead>
+                    <tr>
+                        <th v-for="(header, index) in tableHeaders"
+                            :key="index"
+                            @click="sortTable(index)"
+                            class="cursor-pointer">
+                            {{ header }}
+                            <span v-if="sortColumn === index">
+                                        {{ sortDirection === 'asc' ? '↑' : '↓' }}
+                                    </span>
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-for="(student, index) in paginatedData" :key="index">
+                        <td>{{ (currentPage - 1) * pageSize + index + 1 }}</td>
+                        <td class="text-danger">{{ student.errorList.join(', ') }}</td>
+                        <td v-for="(header, headerIndex) in tableHeaders.slice(2)" :key="headerIndex">
+                            {{ student[header] }}
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="lib/vue.3.5.13.global.prod.min.js"></script>
+<script src="lib/xlsx.0.20.3.mini.min.js"></script>
+<script src="lib/bootstrap.5.3.5.bundle.min.js"></script>
+<script src="js/objects.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html> 
