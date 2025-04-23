@@ -12,7 +12,6 @@ const app = createApp({
             inputPageSize: 100,
             inputPage: 1,
             processing: false,
-            progress: 0,
             currentRow: 0,
             totalRows: 0,
             errorStudents: []
@@ -65,72 +64,91 @@ const app = createApp({
             // 触发文件选择对话框，每次都是新建一个input元素
             const fileInput = document.createElement('input');
             fileInput.type = 'file';
-            fileInput.accept = '.xlsx';
+            fileInput.accept = '.dbf';
             fileInput.style.display = 'none';
             fileInput.addEventListener('change', this.handleFileSelect);
             fileInput.click();
         },
-        async handleFileSelect(event) {
+        handleFileSelect(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             this.selectedFileName = file.name;
             this.processing = true;
-            this.progress = 0;
             this.currentRow = 0;
             this.totalRows = 0;
             this.errorStudents = [];
 
             try {
-                await this.processFileWithWorker(file);
+                this.processFileWithWorker(file);
             } catch (error) {
                 console.error('Error processing file:', error);
-                alert('处理文件时发生错误，请重试');
-            } finally {
                 this.processing = false;
+                alert('处理文件时发生错误，请重试');
             }
         },
         processFileWithWorker(file) {
-            return new Promise((resolve, reject) => {
-                const worker = new Worker('js/worker.js');
+            const worker = new Worker('js/worker.js');
 
-                worker.onmessage = (e) => {
-                    const {type, progress, current, total, students, error} = e.data;
+            worker.onmessage = (e) => {
+                const {type} = e.data;
 
-                    switch (type) {
-                        case 'progress':
-                            this.progress = progress;
-                            this.currentRow = current;
-                            this.totalRows = total;
-                            this.errorStudents = [...this.errorStudents, ...students];
-                            break;
-                        case 'complete':
-                            worker.terminate();
-                            resolve();
-                            break;
-                        case 'error':
-                            worker.terminate();
-                            reject(new Error(error));
-                            break;
-                    }
-                };
+                switch (type) {
+                    case 'finished':
+                        this.processing = false;
+                        worker.terminate();
+                        const data = e.data.data;
 
-                worker.onerror = (error) => {
-                    worker.terminate();
-                    reject(error);
-                };
+                        // 检查文件格式，如果字段数不匹配则提示错误
+                        let fieldsCounts = 0;
+                        const fields = data.fields;
+                        const fieldsMap = {};
+                        for (let i = 0; i < fields.length; i++) {
+                            const field = fields[i];
+                            fieldsMap[field.name] = field;
+                        }
+                        for (let i = 0; i < this.tableHeaders.length; i++) {
+                            const header = this.tableHeaders[i];
+                            if (fieldsMap[header]) {
+                                fieldsCounts++;
+                            }
+                        }
+                        if (fieldsCounts < this.tableHeaders.length - 3) {
+                            alert("文件字段不匹配，请检查文件格式，需要为：kstjxx.dbf");
+                            return;
+                        }
 
-                worker.postMessage({
-                    file,
-                    chunkSize: 100
-                });
-            });
+                        const students = data.records;
+                        this.processStudents(students);
+                        break;
+                }
+            };
+
+            worker.onerror = (error) => {
+                worker.terminate();
+            };
+
+            worker.postMessage({file});
         },
-        sortTable(columnIndex) {
-            if (this.sortColumn === columnIndex) {
+        processStudents(students) {
+            this.totalRows = students.length;
+
+            for (let i = 0; i < students.length; i++) {
+                const studentData = students[i];
+                const student = new Student(studentData);
+                student.checkValidate();
+                this.currentRow++;
+
+                if (student.errorList.length > 0) {
+                    this.errorStudents.push(student);
+                }
+            }
+        },
+        sortTable(sortColumn) {
+            if (this.sortColumn === sortColumn) {
                 this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
             } else {
-                this.sortColumn = columnIndex;
+                this.sortColumn = sortColumn;
                 this.sortDirection = 'asc';
             }
         },
@@ -192,9 +210,6 @@ const app = createApp({
             XLSX.writeFile(wb, filename);
         }
     },
-    mounted() {
-        document.getElementById('fileInput').addEventListener('change', this.handleFileSelect);
-    }
 });
 
 app.mount('#app'); 
