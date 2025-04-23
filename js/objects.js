@@ -152,6 +152,10 @@ function validateTjsxbz(tjsxbz, tjyjbz) {
         return "合格学生有其他受限专业";
     }
 
+    if (!tjyjbz) {
+        return true;
+    }
+
     // 分组：第1组(1位)、第2组(2-7位)、第3组(8-16位)、第4组(17-22位)
     const group2 = tjsxbz.slice(1, 7);  // 第2组，6位，对应标记为2
     const group3 = tjsxbz.slice(7, 16); // 第3组，9位，对应标记为3
