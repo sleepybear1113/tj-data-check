@@ -18,7 +18,7 @@
     <div class="row mb-4">
         <div class="col">
             <div class="input-group">
-                <button class="btn btn-primary" @click="selectFile">选择体检kstjxx.dbf文件</button>
+                <button class="btn btn-primary" @click="selectFile">选择考生体检信息的dbf文件</button>
                 <label>
                     <input type="text" class="form-control" v-model="selectedFileName" readonly>
                 </label>
@@ -28,7 +28,12 @@
 
     <div class="row mb-4">
         <div class="col">
-            <a>本系统可以读取体检数据，并检查数据的完整性和准确性。该程序仅运行在浏览器中，不向其他任何地方发送任何数据。</a>
+            <p>
+                本系统可以读取体检数据，并检查部分数据的完整性和准确性。该程序离线运行，仅运行在浏览器中，不向其他任何地方发送任何数据。
+            </p>
+            <p>
+                本系统会对体检数据的视力、身高体重、听力、色觉、体检结论等做部分核对校验，筛选出可能异常的数据，供人工排查是否有误。
+            </p>
             <hr>
         </div>
     </div>
@@ -41,20 +46,8 @@
 
     <div v-if="errorStudents.length > 0" class="row mb-4">
         <div class="col">
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                    <span class="me-2">每页显示：</span>
-                    <label>
-                        <input type="number" v-model="inputPageSize" @change="changePageSize" min="1"
-                               class="form-control form-control-sm" style="width: 80px;">
-                    </label>
-                    <span class="ms-2">条</span>
-                </div>
-                <div class="d-flex align-items-center">
-                    <button class="btn btn-success me-2" @click="exportExcel">
-                        <i class="bi bi-file-earmark-excel"></i> 导出异常体检信息至Excel
-                    </button>
-                    <span class="me-2">共 {{ errorStudents.length }} 条记录，{{ totalPages }} 页</span>
+            <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center m-2">
                     <button class="btn btn-sm btn-outline-primary" @click="goToPage(1)" :disabled="currentPage === 1">
                         首页
                     </button>
@@ -83,7 +76,22 @@
                                    class="form-control form-control-sm d-inline-block" style="width: 60px;">
                         </label>
                             页
-                        </span>
+                    </span>
+                </div>
+                <div class="d-flex align-items-center m-2">
+                    <span class="me-2">共 {{ totalPages }} 页 {{ errorStudents.length }} 条记录</span>
+
+                    <span class="me-2">每页显示：</span>
+                    <label>
+                        <input type="number" v-model="inputPageSize" @change="changePageSize" min="1"
+                               class="form-control form-control-sm" style="width: 80px;">
+                    </label>
+                    <span class="ms-2">条</span>
+                </div>
+                <div class="d-flex align-items-center m-2">
+                    <button class="btn btn-success me-2" @click="exportExcel">
+                        <i class="bi bi-file-earmark-excel"></i> 导出异常体检信息至Excel
+                    </button>
                 </div>
             </div>
         </div>
