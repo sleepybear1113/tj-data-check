@@ -54,7 +54,7 @@ class Student {
     static getFields() {
         return [
             '序号',
-            '错误信息',
+            '异常信息',
             'XM', 'BMXH',
             'YK_LYSLY', 'YK_LYSLZ',
             'YK_JZSLY', 'YK_JZSLZ',

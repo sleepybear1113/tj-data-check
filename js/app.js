@@ -184,7 +184,7 @@ const app = createApp({
             const data = this.errorStudents.map(student => {
                 const row = {};
                 this.tableHeaders.forEach(header => {
-                    if (header === '错误信息') {
+                    if (header === '异常信息') {
                         row[header] = student.errorList.join(', ');
                     } else {
                         row[header] = student[header] || '';
